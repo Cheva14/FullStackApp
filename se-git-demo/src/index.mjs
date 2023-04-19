@@ -21,35 +21,16 @@ const { conn } = db;
 
 /* Landing route */
 app.get("/", (req, res) => {
-  res.render("signin");
-});
-
-app.get("/index", (req, res) => {
   res.render("index");
 });
 
-// Sample API route
-app.get("/ping", (req, res) => {
-  res.send("pong");
-});
-
-// Gallery route
-app.get("/gallery", (req, res) => {
-  res.render("gallery");
-});
-
-// About route
-app.get("/about", (req, res) => {
-  res.render("about");
-});
-
-// world population route
-app.get("/cities/population/:place", async (req, res) => {
-  const placeName = req.params.place;
-  const population = await db.getPopulation(placeName);
-  if (placeName == "world") {
-    res.render("worldpop", { population });
-  }
+app.post("/countries", async function (req, res) {
+  // Get the submitted values
+  var params = req.body;
+  const place = params.place;
+  const N = params.N;
+  const [rows, fields] = await db.getCountries(place, N);
+  res.render("countries", { rows, fields, place });
 });
 
 app.get("/cities", async (req, res) => {
@@ -58,27 +39,39 @@ app.get("/cities", async (req, res) => {
   return res.render("cities", { rows, fields });
 });
 
-app.get("/cities/:id", async (req, res) => {
-  const cityId = req.params.id;
-  const city = await db.getCity(cityId);
-  return res.render("city", { city });
-});
-
-// Single country page
-app.get("/single-country/:code", async function (req, res) {
-  var countryCode = req.params.code;
-  // Create a country class with the code passed
-  const country = await db.getCountry(countryCode);
-  return res.render("country", { country });
-});
-
 // Returns JSON array of cities
 app.get("/api/cities", async (req, res) => {
   const [rows, fields] = await db.getCities();
+  console.log(fields);
   return res.send(rows);
 });
 
-// Returns JSON array of cities
+// world population route
+app.post("/population", async function (req, res) {
+  const params = req.body;
+  const population = await db.getPopulation(params.place);
+  res.render("population", { population });
+});
+
+app.get("/city-report/:nameid", async (req, res) => {
+  const cityId = req.params.nameid;
+  const city = await db.getCity(cityId);
+  return res.render("city-report", { city });
+});
+
+// Single country page
+app.get("/country-report/:nameid", async function (req, res) {
+  var countryCode = req.params.nameid;
+  // Create a country class with the code passed
+  const country = await db.getCountry(countryCode);
+  return res.render("country-report", { country });
+});
+
+/* Landing route */
+app.get("/signin", (req, res) => {
+  res.render("signin");
+});
+
 app.get("/addcountry", async (req, res) => {
   return res.render("addcountry");
 });
@@ -95,6 +88,29 @@ app.post("/add-country", async function (req, res) {
   } catch (err) {
     console.error(`Error while adding country `, err.message);
   }
+});
+
+app.get("/update-country", async (req, res) => {
+  return res.render("updatecountry");
+});
+
+app.post("/update-country", async function (req, res) {
+  // Get the submitted values
+  var params = req.body;
+  // Adding a try/catch block which will be useful later when we add to the database
+  try {
+    await db.updateCountry(params).then((result) => {
+      // Just a little output for now
+      res.send("data should be added");
+    });
+  } catch (err) {
+    console.error(`Error while adding country `, err.message);
+  }
+});
+
+// About route
+app.get("/about", (req, res) => {
+  res.render("about");
 });
 
 // Run server!
